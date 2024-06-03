@@ -19,3 +19,4 @@ This Python project provides a simple graphical user interface (GUI) to generate
    ```bash
    git clone https://github.com/sha5b/file-structure-generator.git
    cd file-structure-generator
+   python file_structure_generator.py
