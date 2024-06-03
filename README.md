@@ -17,5 +17,5 @@ This Python project provides a simple graphical user interface (GUI) to generate
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/file-structure-generator.git
+   git clone https://github.com/sha5b/file-structure-generator.git
    cd file-structure-generator
