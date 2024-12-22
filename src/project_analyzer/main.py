@@ -20,6 +20,7 @@ from .models import (
     ControlFlow,
     VariableFlow
 )
+from .prompt_generator import PromptGenerator
 from .analyzers.structure import StructureAnalyzer
 from .analyzers.code import CodeAnalyzer
 from .analyzers.function import FunctionAnalyzer
@@ -267,10 +268,16 @@ class ProjectAnalyzer:
 
 
 def main():
-    """GUI entry point"""
+    """CLI entry point"""
     console = Console()
     
-    # Always use GUI folder selector
+    # Check if web interface is requested
+    if "--web" in sys.argv:
+        from .web_interface import run_web_interface
+        run_web_interface()
+        return
+    
+    # Use GUI folder selector
     project_path, output_file = select_project()
     if project_path is None:
         console.print("[yellow]Analysis cancelled.[/yellow]")
@@ -283,9 +290,26 @@ def main():
         # Display results
         analyzer.display_analysis(analysis)
         
-        # Save to file if specified
+        # Generate AI assistant prompts
+        prompts = PromptGenerator.generate_prompts(analysis)
+        
+        # Save results to file if specified
         if output_file:
-            analyzer.save_analysis(analysis, output_file)
+            # Add prompts to analysis results
+            results = analysis.model_dump()
+            results["ai_prompts"] = prompts
+            
+            output_path = Path(output_file)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            with open(output_path, 'w') as f:
+                json.dump(results, f, indent=2)
+                
+            console.print(f"\n💾 Analysis saved to: {output_path}")
+            
+            # Print instructions for web interface
+            console.print("\nTo view results in web interface, run:")
+            console.print("[bold]python -m project_analyzer --web[/bold]")
             
     except Exception as e:
         console.print(f"[red]Error: {str(e)}[/red]")
