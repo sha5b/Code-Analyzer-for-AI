@@ -4,8 +4,10 @@ Code analyzer - Parses and analyzes source code to extract definitions and relat
 import ast
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Any
+from typing import Dict, List, Optional, Set, Tuple, Any, cast
 import networkx as nx
+
+from .quality import QualityAnalyzer
 
 from ..models import (
     CodeLocation,
@@ -27,6 +29,7 @@ class CodeAnalyzer(BaseAnalyzer):
         self.current_file: Optional[str] = None
         self.current_class: Optional[str] = None
         self.current_function: Optional[str] = None
+        self.quality_analyzer = QualityAnalyzer(root_path)
         
     def analyze(self) -> Dict[str, Any]:
         """Analyze all source code files in project"""
@@ -51,9 +54,37 @@ class CodeAnalyzer(BaseAnalyzer):
         # Build dependency graph
         self._build_dependency_graph(files)
         
+        # Get quality metrics
+        quality_results = self.quality_analyzer.analyze()
+        
+        # Update files with quality metrics
+        for file_path, file_analysis in files.items():
+            if file_path in quality_results["function_calls"]:
+                # Update function calls
+                calls = quality_results["function_calls"][file_path]
+                for func in file_analysis.functions:
+                    func.calls = [c for c in calls if c != func.name]
+                for cls in file_analysis.classes:
+                    for method in cls.methods:
+                        method.calls = [c for c in calls if c != method.name]
+                        
+                # Update called_by (reverse mapping)
+                for func in file_analysis.functions:
+                    func.called_by = [
+                        f for f, calls in quality_results["function_calls"].items()
+                        if func.name in calls and f != file_path
+                    ]
+                for cls in file_analysis.classes:
+                    for method in cls.methods:
+                        method.called_by = [
+                            f for f, calls in quality_results["function_calls"].items()
+                            if method.name in calls and f != file_path
+                        ]
+        
         return {
             "files": files,
-            "dependencies": self._get_dependencies()
+            "dependencies": self._get_dependencies(),
+            "quality_metrics": quality_results
         }
         
     def analyze_file(self, path: Path) -> Optional[File]:

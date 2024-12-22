@@ -16,6 +16,15 @@ A comprehensive tool for AI-first project analysis and documentation. This tool 
   - Variable tracking and scope analysis
   - Import and dependency mapping
   - Documentation extraction
+  - Cyclomatic complexity metrics
+  - Function call relationships
+  - Dead code detection
+
+- 📊 **Code Quality Metrics**
+  - Function complexity scoring
+  - Call graph analysis (what calls what)
+  - Function coupling analysis
+  - Method relationship mapping
 
 - 📊 **Dependency Analysis**
   - File-level dependency graphs
@@ -96,8 +105,27 @@ The tool generates a comprehensive JSON output containing:
   },
   "files": {
     "src/main.py": {
-      "functions": [...],
-      "classes": [...],
+      "functions": [
+        {
+          "name": "process_data",
+          "complexity": 5,
+          "calls": ["validate_input", "transform_data"],
+          "called_by": ["main", "batch_process"]
+        }
+      ],
+      "classes": [
+        {
+          "name": "DataProcessor",
+          "methods": [
+            {
+              "name": "process",
+              "complexity": 3,
+              "calls": ["validate", "transform"],
+              "called_by": ["execute"]
+            }
+          ]
+        }
+      ],
       "imports": [...],
       "variables": [...]
     }
@@ -124,6 +152,9 @@ The analysis output is specifically designed to help AI systems:
    - Documentation extraction
    - Code purpose identification
    - Architecture patterns
+   - Code complexity insights
+   - Function relationship mapping
+   - Coupling analysis
 
 4. **Modification Planning**
    - Impact analysis

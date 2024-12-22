@@ -12,9 +12,17 @@ from rich.tree import Tree
 from rich.panel import Panel
 from rich.syntax import Syntax
 
-from .models import ProjectAnalysis, ProjectStructure
+from .models import (
+    ProjectAnalysis, 
+    ProjectStructure,
+    Function,
+    FunctionBehavior,
+    ControlFlow,
+    VariableFlow
+)
 from .analyzers.structure import StructureAnalyzer
 from .analyzers.code import CodeAnalyzer
+from .analyzers.function import FunctionAnalyzer
 from .folder_selector import select_project
 
 
@@ -38,9 +46,74 @@ class ProjectAnalyzer:
         
         self.console.print(Panel.fit("📝 Analyzing source code...", style="blue"))
         
-        # Analyze source code
+        # Analyze source code and functions
         code_analyzer = CodeAnalyzer(self.root_path)
         code_results = code_analyzer.analyze()
+        
+        # Detailed function analysis
+        self.console.print(Panel.fit("🔍 Analyzing function behavior...", style="blue"))
+        function_analyzer = FunctionAnalyzer(self.root_path)
+        function_results = function_analyzer.analyze()
+        
+        # Update function analysis results
+        for file_path, file_analysis in code_results["files"].items():
+            for func in file_analysis.functions:
+                flow_key = f"{file_path}::{func.name}"
+                if flow_key in function_results["function_flows"]:
+                    flow = function_results["function_flows"][flow_key]
+                    func.behavior = FunctionBehavior(
+                        entry_points=flow.entry_points,
+                        exit_points=flow.exit_points,
+                        return_paths=flow.return_paths,
+                        control_flow=[ControlFlow(**node.__dict__) for node in flow.control_flow],
+                        pure=flow.pure,
+                        side_effects=flow.side_effects,
+                        raises=flow.raises,
+                        async_status=flow.async_status,
+                        generators=flow.generators,
+                        recursion=flow.recursion
+                    )
+                    func.variable_flow = [
+                        VariableFlow(
+                            name=name,
+                            assignments=var.assignments,
+                            reads=var.reads,
+                            scope=var.scope,
+                            type_hints=var.type_hints,
+                            potential_values=var.potential_values or []
+                        )
+                        for name, var in flow.variables.items()
+                    ]
+            
+            # Update class methods
+            for cls in file_analysis.classes:
+                for method in cls.methods:
+                    flow_key = f"{file_path}::{cls.name}.{method.name}"
+                    if flow_key in function_results["function_flows"]:
+                        flow = function_results["function_flows"][flow_key]
+                        method.behavior = FunctionBehavior(
+                            entry_points=flow.entry_points,
+                            exit_points=flow.exit_points,
+                            return_paths=flow.return_paths,
+                            control_flow=[ControlFlow(**node.__dict__) for node in flow.control_flow],
+                            pure=flow.pure,
+                            side_effects=flow.side_effects,
+                            raises=flow.raises,
+                            async_status=flow.async_status,
+                            generators=flow.generators,
+                            recursion=flow.recursion
+                        )
+                        method.variable_flow = [
+                            VariableFlow(
+                                name=name,
+                                assignments=var.assignments,
+                                reads=var.reads,
+                                scope=var.scope,
+                                type_hints=var.type_hints,
+                                potential_values=var.potential_values or []
+                            )
+                            for name, var in flow.variables.items()
+                        ]
         
         # Combine results
         analysis = ProjectAnalysis(
@@ -77,19 +150,91 @@ class ProjectAnalyzer:
             self.console.print("\n[bold blue]Code Analysis:[/bold blue]")
             
             # Functions and Classes
-            table = Table(show_header=True, header_style="bold")
-            table.add_column("File")
-            table.add_column("Functions")
-            table.add_column("Classes")
+            # Code Structure
+            structure_table = Table(show_header=True, header_style="bold")
+            structure_table.add_column("File")
+            structure_table.add_column("Functions")
+            structure_table.add_column("Classes")
             
             for file_path, file_analysis in analysis.files.items():
-                table.add_row(
+                structure_table.add_row(
                     file_path,
                     str(len(file_analysis.functions)),
                     str(len(file_analysis.classes))
                 )
                 
-            self.console.print(table)
+            self.console.print(structure_table)
+            
+            # Code Quality and Behavior Analysis
+            self.console.print("\n[bold blue]Function Analysis:[/bold blue]")
+            
+            for file_path, file_analysis in analysis.files.items():
+                if file_analysis.functions or file_analysis.classes:
+                    self.console.print(f"\n[bold]{file_path}[/bold]")
+                    
+                    # Basic metrics
+                    metrics_table = Table(show_header=True, header_style="bold")
+                    metrics_table.add_column("Function")
+                    metrics_table.add_column("Complexity")
+                    metrics_table.add_column("Pure")
+                    metrics_table.add_column("Side Effects")
+                    metrics_table.add_column("Raises")
+                    
+                    # Function flow
+                    flow_table = Table(show_header=True, header_style="bold")
+                    flow_table.add_column("Function")
+                    flow_table.add_column("Entry Points")
+                    flow_table.add_column("Exit Points")
+                    flow_table.add_column("Variables")
+                    flow_table.add_column("Control Flow")
+                    
+                    def add_function_to_tables(func: Function, prefix: str = ""):
+                        # Add to metrics table
+                        metrics_table.add_row(
+                            prefix + func.name,
+                            str(func.complexity or "N/A"),
+                            "✓" if func.behavior and func.behavior.pure else "✗",
+                            "\n".join(func.behavior.side_effects) if func.behavior else "N/A",
+                            ", ".join(func.behavior.raises) if func.behavior else "N/A"
+                        )
+                        
+                        # Add to flow table
+                        if func.behavior:
+                            var_info = []
+                            for v in func.variable_flow:
+                                scope = f"[blue]{v.scope}[/blue]"
+                                assigns = f"assigned:{len(v.assignments)}"
+                                reads = f"read:{len(v.reads)}"
+                                var_info.append(f"{v.name} ({scope} {assigns} {reads})")
+                            
+                            flow_info = []
+                            for cf in func.behavior.control_flow:
+                                if cf.condition:
+                                    flow_info.append(f"{cf.node_type}: {cf.condition}")
+                                else:
+                                    flow_info.append(cf.node_type)
+                            
+                            flow_table.add_row(
+                                prefix + func.name,
+                                "\n".join(func.behavior.entry_points) or "None",
+                                "\n".join(func.behavior.exit_points) or "None",
+                                "\n".join(var_info),
+                                "\n".join(flow_info)
+                            )
+                    
+                    # Add functions
+                    for func in file_analysis.functions:
+                        add_function_to_tables(func)
+                    
+                    # Add class methods
+                    for cls in file_analysis.classes:
+                        for method in cls.methods:
+                            add_function_to_tables(method, f"{cls.name}.")
+                    
+                    self.console.print("\n[bold]Metrics:[/bold]")
+                    self.console.print(metrics_table)
+                    self.console.print("\n[bold]Flow Analysis:[/bold]")
+                    self.console.print(flow_table)
             
     def _build_structure_tree(self, structure: ProjectStructure, tree: Optional[Tree] = None) -> Tree:
         """Build rich Tree from ProjectStructure"""
@@ -122,19 +267,14 @@ class ProjectAnalyzer:
 
 
 def main():
-    """GUI/CLI entry point"""
+    """GUI entry point"""
     console = Console()
     
-    # Check if running in CLI mode
-    if len(sys.argv) > 1:
-        project_path = sys.argv[1]
-        output_file = sys.argv[2] if len(sys.argv) > 2 else None
-    else:
-        # Use GUI folder selector
-        project_path, output_file = select_project()
-        if project_path is None:
-            console.print("[yellow]Analysis cancelled.[/yellow]")
-            sys.exit(0)
+    # Always use GUI folder selector
+    project_path, output_file = select_project()
+    if project_path is None:
+        console.print("[yellow]Analysis cancelled.[/yellow]")
+        sys.exit(0)
     
     try:
         analyzer = ProjectAnalyzer(project_path)

@@ -25,6 +25,41 @@ class Variable(BaseModel):
     docstring: Optional[str] = None
 
 
+class ControlFlow(BaseModel):
+    """Control flow information for a function"""
+    line_no: int
+    node_type: str
+    condition: Optional[str] = None
+    true_branch: List[int] = Field(default_factory=list)
+    false_branch: List[int] = Field(default_factory=list)
+    parent: Optional[int] = None
+
+
+class VariableFlow(BaseModel):
+    """Variable usage and flow analysis"""
+    name: str
+    assignments: List[int] = Field(default_factory=list)  # Assignment line numbers
+    reads: List[int] = Field(default_factory=list)  # Usage line numbers
+    scope: str = "local"  # local, global, nonlocal, parameter
+    type_hints: Optional[str] = None
+    potential_values: List[str] = Field(default_factory=list)
+
+
+class FunctionBehavior(BaseModel):
+    """Detailed function behavior analysis"""
+    entry_points: List[str] = Field(default_factory=list)  # Functions that call this
+    exit_points: List[str] = Field(default_factory=list)  # Functions called before return
+    return_paths: List[List[int]] = Field(default_factory=list)  # Paths to returns
+    control_flow: List[ControlFlow] = Field(default_factory=list)
+    pure: bool = True  # No side effects
+    side_effects: List[str] = Field(default_factory=list)
+    raises: List[str] = Field(default_factory=list)  # Potential exceptions
+    async_status: bool = False
+    generators: bool = False
+    recursion: bool = False
+    variables: Dict[str, VariableFlow] = Field(default_factory=dict)  # Variable usage tracking
+
+
 class Function(BaseModel):
     """Function/method definition and metadata"""
     name: str
@@ -37,6 +72,10 @@ class Function(BaseModel):
     called_by: List[str] = Field(default_factory=list)  # Functions that call this
     variables: List[Variable] = Field(default_factory=list)
     complexity: Optional[int] = None  # Cyclomatic complexity
+    
+    # New detailed analysis fields
+    behavior: Optional[FunctionBehavior] = None
+    variable_flow: List[VariableFlow] = Field(default_factory=list)
 
 
 class Class(BaseModel):
