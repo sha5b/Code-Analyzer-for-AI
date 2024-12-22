@@ -1,22 +1,143 @@
-# File Structure Generator
+# Project Analyzer
 
-This Python project provides a simple graphical user interface (GUI) to generate a text file representing the structure of a selected directory. 
+A comprehensive tool for AI-first project analysis and documentation. This tool generates detailed maps of project structure, code relationships, and dependencies, making it easier for AI systems to understand and work with your codebase.
 
 ## Features
 
-- Select a directory through a GUI.
-- Generate a text file representing the structure of the selected directory.
-- Save the generated file structure to a specified location.
+- 📁 **Project Structure Analysis**
+  - Complete directory and file hierarchy
+  - File metadata (size, modification dates, encoding)
+  - Language statistics and file type detection
+  - Entry point identification
 
-## Requirements
+- 🔍 **Code Analysis**
+  - Function and method definitions with signatures
+  - Class hierarchies and relationships
+  - Variable tracking and scope analysis
+  - Import and dependency mapping
+  - Documentation extraction
 
-- Python 3.x
-- Tkinter (usually comes pre-installed with Python)
+- 📊 **Dependency Analysis**
+  - File-level dependency graphs
+  - Package dependencies
+  - Import relationship visualization
+  - Circular dependency detection
+
+- 🎨 **Rich Terminal Output**
+  - Beautiful directory trees
+  - Syntax-highlighted code snippets
+  - Detailed statistics tables
+  - Progress indicators
 
 ## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/sha5b/file-structure-generator.git
-   cd file-structure-generator
-   python file_structure_generator.py
+1. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+2. Install the package:
+```bash
+pip install .
+```
+
+## Usage
+
+### Command Line Interface
+
+Basic usage:
+```bash
+project-analyzer /path/to/your/project
+```
+
+Save analysis to file:
+```bash
+project-analyzer /path/to/your/project output.json
+```
+
+### Python API
+
+```python
+from project_analyzer.main import ProjectAnalyzer
+
+# Create analyzer instance
+analyzer = ProjectAnalyzer("/path/to/your/project")
+
+# Run analysis
+analysis = analyzer.analyze()
+
+# Display results in terminal
+analyzer.display_analysis(analysis)
+
+# Save results to file
+analyzer.save_analysis(analysis, "output.json")
+```
+
+## Analysis Output
+
+The tool generates a comprehensive JSON output containing:
+
+```json
+{
+  "root_path": "/path/to/project",
+  "name": "project-name",
+  "total_files": 42,
+  "languages": {
+    "python": 15,
+    "javascript": 8,
+    "typescript": 5
+  },
+  "structure": {
+    "name": "project-name",
+    "path": ".",
+    "is_dir": true,
+    "children": [...]
+  },
+  "files": {
+    "src/main.py": {
+      "functions": [...],
+      "classes": [...],
+      "imports": [...],
+      "variables": [...]
+    }
+  },
+  "entry_points": ["src/main.py"]
+}
+```
+
+## AI Integration
+
+The analysis output is specifically designed to help AI systems:
+
+1. **Context Understanding**
+   - Complete project structure visibility
+   - Code relationship mapping
+   - Dependency tracking
+
+2. **Code Navigation**
+   - Clear file relationships
+   - Function and class locations
+   - Import chains
+
+3. **Semantic Analysis**
+   - Documentation extraction
+   - Code purpose identification
+   - Architecture patterns
+
+4. **Modification Planning**
+   - Impact analysis
+   - Dependency checking
+   - Entry point identification
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
