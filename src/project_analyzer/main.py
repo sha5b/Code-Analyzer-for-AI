@@ -1,5 +1,5 @@
 """
-Main analyzer class and CLI interface
+Main analyzer class and GUI/CLI interface
 """
 import json
 from pathlib import Path
@@ -15,6 +15,7 @@ from rich.syntax import Syntax
 from .models import ProjectAnalysis, ProjectStructure
 from .analyzers.structure import StructureAnalyzer
 from .analyzers.code import CodeAnalyzer
+from .folder_selector import select_project
 
 
 class ProjectAnalyzer:
@@ -121,16 +122,19 @@ class ProjectAnalyzer:
 
 
 def main():
-    """CLI entry point"""
+    """GUI/CLI entry point"""
     console = Console()
     
-    if len(sys.argv) < 2:
-        console.print("[red]Error: Please provide a project path[/red]")
-        console.print("Usage: project-analyzer <project_path> [output_file]")
-        sys.exit(1)
-        
-    project_path = sys.argv[1]
-    output_file = sys.argv[2] if len(sys.argv) > 2 else None
+    # Check if running in CLI mode
+    if len(sys.argv) > 1:
+        project_path = sys.argv[1]
+        output_file = sys.argv[2] if len(sys.argv) > 2 else None
+    else:
+        # Use GUI folder selector
+        project_path, output_file = select_project()
+        if project_path is None:
+            console.print("[yellow]Analysis cancelled.[/yellow]")
+            sys.exit(0)
     
     try:
         analyzer = ProjectAnalyzer(project_path)
