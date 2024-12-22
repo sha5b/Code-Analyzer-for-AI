@@ -12,27 +12,30 @@ HTML_TEMPLATE = """
 <html>
 <head>
     <title>Project Analysis Prompts</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
             line-height: 1.5;
             margin: 0;
             padding: 20px;
-            background: #f5f5f5;
+            background: #1e1e1e;
+            color: #d4d4d4;
         }
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
+            background: #252526;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
         .tabs {
             display: flex;
             gap: 2px;
             margin-bottom: 20px;
-            background: #eee;
+            background: #2d2d2d;
             padding: 5px;
             border-radius: 6px;
         }
@@ -43,26 +46,29 @@ HTML_TEMPLATE = """
             background: none;
             border-radius: 4px;
             font-size: 14px;
+            color: #d4d4d4;
+            transition: all 0.2s;
         }
         .tab.active {
-            background: white;
+            background: #3c3c3c;
             font-weight: 500;
+            color: #fff;
         }
         .tab:hover:not(.active) {
-            background: rgba(255,255,255,0.5);
+            background: #3c3c3c50;
         }
         .content {
             display: none;
             white-space: pre-wrap;
-            font-family: 'Consolas', 'Monaco', monospace;
-            background: #f8f8f8;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            background: #1e1e1e;
             padding: 20px;
-            border-radius: 6px;
-            border: 1px solid #eee;
+            border-radius: 8px;
+            border: 1px solid #333;
             font-size: 14px;
             line-height: 1.6;
             overflow-x: auto;
-            color: #333;
+            color: #d4d4d4;
         }
         .content.active {
             display: block;
@@ -72,14 +78,38 @@ HTML_TEMPLATE = """
             margin-bottom: 20px;
             font-size: 24px;
             font-weight: 500;
-            color: #2c3e50;
+            color: #fff;
         }
         .project-name {
-            color: #666;
+            color: #888;
             font-size: 16px;
             margin-bottom: 20px;
             padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #333;
+        }
+        .section-title {
+            color: #569cd6;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        .section-divider {
+            border-top: 1px solid #333;
+            margin: 20px 0;
+        }
+        .function-name {
+            color: #dcdcaa;
+        }
+        .class-name {
+            color: #4ec9b0;
+        }
+        .file-path {
+            color: #ce9178;
+        }
+        .keyword {
+            color: #569cd6;
+        }
+        .comment {
+            color: #6a9955;
         }
     </style>
 </head>
@@ -96,7 +126,7 @@ HTML_TEMPLATE = """
             {% endfor %}
         </div>
         {% for category, content in prompts.items() %}
-        <pre class="content {% if loop.first %}active{% endif %}" id="{{ category }}">{{ content }}</pre>
+        <pre class="content {% if loop.first %}active{% endif %}" id="{{ category }}"><code class="language-markdown">{{ content }}</code></pre>
         {% endfor %}
     </div>
     <script>
@@ -113,6 +143,13 @@ HTML_TEMPLATE = """
             document.getElementById(category).classList.add('active');
             document.querySelector(`[onclick="showContent('${category}')"]`).classList.add('active');
         }
+        
+        // Initialize syntax highlighting
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.querySelectorAll('pre code').forEach((el) => {
+                hljs.highlightElement(el);
+            });
+        });
     </script>
 </body>
 </html>
@@ -133,6 +170,14 @@ def run_web_interface():
         
         # Generate prompts
         prompts = PromptGenerator.generate_prompts(analysis)
+        
+        # Debug print
+        print("\nGenerated prompts:")
+        for category, content in prompts.items():
+            print(f"\n{category}:")
+            print("-" * 40)
+            print(content)
+            print("-" * 40)
         
         # Define route
         @app.route('/')

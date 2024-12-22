@@ -1,77 +1,105 @@
 # Project Analyzer
 
-A comprehensive tool for AI-first project analysis and documentation. This tool generates detailed maps of project structure, code relationships, and dependencies, making it easier for AI systems to understand and work with your codebase.
+A powerful multi-language code analysis tool that provides deep insights into your codebase structure, dependencies, and behavior.
 
 ## Features
 
-- 📁 **Project Structure Analysis**
-  - Complete directory and file hierarchy
-  - File metadata (size, modification dates, encoding)
-  - Language statistics and file type detection
-  - Entry point identification
+- **Multi-Language Support**:
+  - Python (with type hints and docstrings)
+  - JavaScript/TypeScript (with JSDoc support)
+  - React/React-TypeScript
+  - C/C++ (with templates and namespaces)
+  - C# (with attributes and type definitions)
+  - Svelte (component analysis)
 
-- 🔍 **Code Analysis**
-  - Function and method definitions with signatures
-  - Class hierarchies and relationships
-  - Variable tracking and scope analysis
-  - Import and dependency mapping
+- **Code Analysis**:
+  - Function and class definitions
+  - Variable scopes and dependencies
+  - Import/dependency tracking
+  - Control flow analysis
+  - Code quality metrics
+  - Function behavior analysis
+  - Type inference
   - Documentation extraction
-  - Cyclomatic complexity metrics
-  - Function call relationships
-  - Dead code detection
 
-- 📊 **Code Quality Metrics**
-  - Function complexity scoring
-  - Call graph analysis (what calls what)
-  - Function coupling analysis
-  - Method relationship mapping
+- **Project Structure**:
+  - Directory structure visualization
+  - Entry point detection
+  - File categorization
+  - Language statistics
 
-- 📊 **Dependency Analysis**
-  - File-level dependency graphs
-  - Package dependencies
-  - Import relationship visualization
-  - Circular dependency detection
-
-- 🎨 **Rich Terminal Output**
-  - Beautiful directory trees
-  - Syntax-highlighted code snippets
-  - Detailed statistics tables
-  - Progress indicators
+- **Visualization**:
+  - Rich terminal output
+  - Web interface for interactive exploration
+  - Dependency graphs
+  - Control flow diagrams
 
 ## Installation
 
-1. Create and activate a virtual environment:
+### Prerequisites
+
+- Python 3.8 or higher
+- pip (Python package installer)
+
+### Windows
+
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/project-analyzer.git
+cd project-analyzer
+
+# Create and activate virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+.\venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install the package in development mode
+pip install -e .
 ```
 
-2. Install the package:
+### macOS/Linux
+
 ```bash
-pip install .
+# Clone the repository
+git clone https://github.com/yourusername/project-analyzer.git
+cd project-analyzer
+
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install the package in development mode
+pip install -e .
 ```
 
 ## Usage
 
 ### Command Line Interface
 
-Basic usage:
+1. Basic Analysis:
 ```bash
-project-analyzer /path/to/your/project
+python -m project_analyzer
 ```
+This will open a folder selection dialog. Choose your project directory and optionally specify an output file for the analysis results.
 
-Save analysis to file:
+2. Web Interface:
 ```bash
-project-analyzer /path/to/your/project output.json
+python -m project_analyzer --web
 ```
+This launches the web interface for interactive exploration of analysis results.
 
 ### Python API
 
 ```python
-from project_analyzer.main import ProjectAnalyzer
+from project_analyzer import ProjectAnalyzer
 
-# Create analyzer instance
-analyzer = ProjectAnalyzer("/path/to/your/project")
+# Initialize analyzer
+analyzer = ProjectAnalyzer("path/to/your/project")
 
 # Run analysis
 analysis = analyzer.analyze()
@@ -85,90 +113,117 @@ analyzer.save_analysis(analysis, "output.json")
 
 ## Analysis Output
 
-The tool generates a comprehensive JSON output containing:
+The tool provides comprehensive analysis including:
 
-```json
-{
-  "root_path": "/path/to/project",
-  "name": "project-name",
-  "total_files": 42,
-  "languages": {
-    "python": 15,
-    "javascript": 8,
-    "typescript": 5
-  },
-  "structure": {
-    "name": "project-name",
-    "path": ".",
-    "is_dir": true,
-    "children": [...]
-  },
-  "files": {
-    "src/main.py": {
-      "functions": [
-        {
-          "name": "process_data",
-          "complexity": 5,
-          "calls": ["validate_input", "transform_data"],
-          "called_by": ["main", "batch_process"]
-        }
-      ],
-      "classes": [
-        {
-          "name": "DataProcessor",
-          "methods": [
-            {
-              "name": "process",
-              "complexity": 3,
-              "calls": ["validate", "transform"],
-              "called_by": ["execute"]
-            }
-          ]
-        }
-      ],
-      "imports": [...],
-      "variables": [...]
-    }
-  },
-  "entry_points": ["src/main.py"]
-}
+1. **Project Overview**:
+   - Total file count
+   - Language distribution
+   - Entry points
+   - Directory structure
+
+2. **Code Analysis**:
+   - Function and class definitions
+   - Dependencies between files
+   - Import relationships
+   - Code complexity metrics
+
+3. **Function Analysis**:
+   - Control flow
+   - Variable usage
+   - Side effects
+   - Pure function detection
+   - Exception paths
+   - Async behavior
+
+4. **Quality Metrics**:
+   - Code complexity
+   - Function length
+   - Documentation coverage
+   - Type hint coverage
+
+## Web Interface
+
+The web interface provides an interactive way to explore your codebase:
+
+1. Start the web interface:
+```bash
+python -m project_analyzer --web
 ```
 
-## AI Integration
+2. Open your browser and navigate to `http://localhost:5000`
 
-The analysis output is specifically designed to help AI systems:
+3. Features:
+   - Interactive file browser
+   - Dependency visualization
+   - Code structure diagrams
+   - Search functionality
+   - Metric dashboards
 
-1. **Context Understanding**
-   - Complete project structure visibility
-   - Code relationship mapping
-   - Dependency tracking
+## Configuration
 
-2. **Code Navigation**
-   - Clear file relationships
-   - Function and class locations
-   - Import chains
+The analyzer can be configured through a `pyproject.toml` file in your project root:
 
-3. **Semantic Analysis**
-   - Documentation extraction
-   - Code purpose identification
-   - Architecture patterns
-   - Code complexity insights
-   - Function relationship mapping
-   - Coupling analysis
+```toml
+[tool.project-analyzer]
+exclude = [
+    "tests/*",
+    "docs/*",
+    "*.pyc",
+    "__pycache__"
+]
 
-4. **Modification Planning**
-   - Impact analysis
-   - Dependency checking
-   - Entry point identification
+[tool.project-analyzer.quality]
+max_complexity = 10
+max_line_length = 88
+min_documentation_coverage = 80
+```
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Run tests: `pytest`
+5. Submit a pull request
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Built with [Rich](https://github.com/Textualize/rich) for beautiful terminal output
+- Uses [NetworkX](https://networkx.org/) for dependency analysis
+- Web interface powered by Flask
+
+## Troubleshooting
+
+### Common Issues
+
+1. **ImportError: No module named 'project_analyzer'**
+   - Ensure you've installed the package in development mode: `pip install -e .`
+   - Check that your virtual environment is activated
+
+2. **Permission denied when running the analyzer**
+   - On Unix systems, ensure the script has execute permissions:
+     ```bash
+     chmod +x venv/bin/project_analyzer
+     ```
+
+3. **Web interface not starting**
+   - Check if port 5000 is available
+   - Ensure Flask is installed correctly
+
+### Getting Help
+
+- Open an issue on GitHub
+- Check the documentation
+- Join our community discussions
+
+## Roadmap
+
+- [ ] Add support for more languages (Rust, Go, Ruby)
+- [ ] Implement machine learning-based code quality predictions
+- [ ] Add real-time analysis capabilities
+- [ ] Enhance visualization options
+- [ ] Add plugin system for custom analyzers

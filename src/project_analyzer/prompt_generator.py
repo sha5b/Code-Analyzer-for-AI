@@ -10,12 +10,45 @@ class PromptGenerator:
     @staticmethod
     def generate_prompts(analysis: ProjectAnalysis) -> Dict[str, str]:
         """Generate all prompts from analysis results"""
-        prompts = {
-            "project_overview": PromptGenerator._generate_overview_prompt(analysis),
-            "architecture": PromptGenerator._generate_architecture_prompt(analysis),
-            "functions": PromptGenerator._generate_functions_prompt(analysis),
-            "classes": PromptGenerator._generate_classes_prompt(analysis)
-        }
+        prompts = {}
+        
+        # Always include overview
+        prompts["project_overview"] = PromptGenerator._generate_overview_prompt(analysis)
+        
+        # Architecture section
+        arch_prompt = PromptGenerator._generate_architecture_prompt(analysis)
+        if arch_prompt.strip():  # Only include if not empty
+            prompts["architecture"] = arch_prompt
+            
+        # Functions section if there are any functions
+        has_functions = any(file.functions for file in analysis.files.values())
+        if has_functions:
+            prompts["functions"] = PromptGenerator._generate_functions_prompt(analysis)
+            
+        # Classes section if there are any classes
+        has_classes = any(file.classes for file in analysis.files.values())
+        if has_classes:
+            prompts["classes"] = PromptGenerator._generate_classes_prompt(analysis)
+            
+        # Add suggestions section
+        suggestions = []
+        
+        if not has_functions and not has_classes:
+            suggestions.append("- This appears to be a non-code project or contains no analyzable source files")
+        
+        if has_functions and not any(f.docstring for file in analysis.files.values() for f in file.functions):
+            suggestions.append("- Consider adding docstrings to functions to improve code documentation")
+            
+        if has_classes and not any(c.docstring for file in analysis.files.values() for c in file.classes):
+            suggestions.append("- Consider adding docstrings to classes to improve code documentation")
+            
+        if suggestions:
+            prompts["suggestions"] = "\n".join([
+                "Suggestions for Improvement:",
+                "-------------------------",
+                *suggestions
+            ])
+            
         return prompts
 
     @staticmethod

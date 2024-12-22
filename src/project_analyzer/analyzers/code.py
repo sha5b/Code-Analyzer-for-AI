@@ -4,10 +4,16 @@ Code analyzer - Parses and analyzes source code to extract definitions and relat
 import ast
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Any, cast
+from typing import Dict, List, Optional, Set, Tuple, Any, cast, Type
 import networkx as nx
 
 from .quality import QualityAnalyzer
+from .languages.base import LanguageAnalyzer
+from .languages.python import PythonAnalyzer
+from .languages.javascript import JavaScriptAnalyzer
+from .languages.cpp import CppAnalyzer
+from .languages.csharp import CSharpAnalyzer
+from .languages.svelte import SvelteAnalyzer
 
 from ..models import (
     CodeLocation,
@@ -40,7 +46,10 @@ class CodeAnalyzer(BaseAnalyzer):
                 continue
                 
             file_type = self.get_file_type(path)
-            if file_type not in ['python', 'javascript', 'typescript']:
+            if file_type not in [
+                'python', 'javascript', 'typescript', 'react', 'react-typescript',
+                'c++', 'c', 'c#', 'svelte'
+            ]:
                 continue
                 
             try:
@@ -108,176 +117,86 @@ class CodeAnalyzer(BaseAnalyzer):
             encoding=self.get_file_encoding(path)
         )
         
-        if self.get_file_type(path) == 'python':
+        # Get appropriate analyzer for file type
+        analyzer_class = self._get_analyzer_class(path)
+        if analyzer_class:
             try:
-                tree = ast.parse(content)
-                self._analyze_python_ast(tree, file_analysis)
-            except SyntaxError:
+                analyzer = analyzer_class(path, content)
+                analysis_result = analyzer.analyze()
+                
+                # Update file analysis with results
+                file_analysis.functions.extend(analysis_result.get("functions", []))
+                file_analysis.classes.extend(analysis_result.get("classes", []))
+                file_analysis.variables.extend(analysis_result.get("variables", []))
+                file_analysis.imports.extend(analysis_result.get("imports", []))
+                file_analysis.dependencies.extend(analyzer.get_dependencies())
+                
+            except Exception as e:
+                print(f"Error analyzing {path}: {e}")
                 return None
                 
         return file_analysis
         
-    def _analyze_python_ast(self, tree: ast.AST, file_analysis: File):
-        """Analyze Python AST"""
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                self._handle_import(node, file_analysis)
-            elif isinstance(node, ast.ImportFrom):
-                self._handle_import_from(node, file_analysis)
-            elif isinstance(node, ast.FunctionDef):
-                self._handle_function(node, file_analysis)
-            elif isinstance(node, ast.ClassDef):
-                self._handle_class(node, file_analysis)
-            elif isinstance(node, ast.Assign):
-                self._handle_assignment(node, file_analysis)
-                
-    def _handle_import(self, node: ast.Import, file_analysis: File):
-        """Handle Import nodes"""
-        for name in node.names:
-            import_info = Import(
-                module=name.name,
-                alias=name.asname,
-                location=CodeLocation(
-                    file=self.current_file,
-                    line_start=node.lineno,
-                    line_end=node.lineno,
-                    column_start=node.col_offset,
-                    column_end=node.end_col_offset
-                )
-            )
-            file_analysis.imports.append(import_info)
-            
-    def _handle_import_from(self, node: ast.ImportFrom, file_analysis: File):
-        """Handle ImportFrom nodes"""
-        module = node.module or ''
-        for name in node.names:
-            import_info = Import(
-                module=module,
-                names=[name.name],
-                alias=name.asname,
-                location=CodeLocation(
-                    file=self.current_file,
-                    line_start=node.lineno,
-                    line_end=node.lineno,
-                    column_start=node.col_offset,
-                    column_end=node.end_col_offset
-                ),
-                is_from_import=True
-            )
-            file_analysis.imports.append(import_info)
-            
-    def _handle_function(self, node: ast.FunctionDef, file_analysis: File):
-        """Handle FunctionDef nodes"""
-        args = []
-        for arg in node.args.args:
-            arg_type = None
-            if arg.annotation:
-                try:
-                    arg_type = ast.unparse(arg.annotation)
-                except (AttributeError, ValueError):
-                    arg_type = None
-            args.append({"name": arg.arg, "type": arg_type})
-            
-        returns = None
-        if node.returns:
-            try:
-                returns = ast.unparse(node.returns)
-            except (AttributeError, ValueError):
-                returns = None
-            
-        func = Function(
-            name=node.name,
-            location=CodeLocation(
-                file=self.current_file,
-                line_start=node.lineno,
-                line_end=node.end_lineno,
-                column_start=node.col_offset,
-                column_end=node.end_col_offset
-            ),
-            args=args,
-            returns=returns,
-            docstring=ast.get_docstring(node),
-            decorators=[ast.unparse(d) for d in node.decorator_list]
-        )
+    def _get_analyzer_class(self, path: Path) -> Optional[Type[LanguageAnalyzer]]:
+        """Get appropriate language analyzer for file type"""
+        file_type = self.get_file_type(path)
         
-        if self.current_class:
-            # Add to current class
-            for cls in file_analysis.classes:
-                if cls.name == self.current_class:
-                    cls.methods.append(func)
-                    break
-        else:
-            file_analysis.functions.append(func)
-            
-    def _handle_class(self, node: ast.ClassDef, file_analysis: File):
-        """Handle ClassDef nodes"""
-        prev_class = self.current_class
-        self.current_class = node.name
+        return {
+            'python': PythonAnalyzer,
+            'javascript': JavaScriptAnalyzer,
+            'typescript': JavaScriptAnalyzer,
+            'react': JavaScriptAnalyzer,
+            'react-typescript': JavaScriptAnalyzer,
+            'c++': CppAnalyzer,
+            'c': CppAnalyzer,
+            'c#': CSharpAnalyzer,
+            'svelte': SvelteAnalyzer
+        }.get(file_type)
         
-        cls = Class(
-            name=node.name,
-            location=CodeLocation(
-                file=self.current_file,
-                line_start=node.lineno,
-                line_end=node.end_lineno,
-                column_start=node.col_offset,
-                column_end=node.end_col_offset
-            ),
-            base_classes=[ast.unparse(b) for b in node.bases],
-            docstring=ast.get_docstring(node),
-            decorators=[ast.unparse(d) for d in node.decorator_list]
-        )
-        
-        file_analysis.classes.append(cls)
-        
-        # Process class body
-        for item in node.body:
-            if isinstance(item, ast.FunctionDef):
-                self._handle_function(item, file_analysis)
-            elif isinstance(item, ast.Assign):
-                self._handle_assignment(item, file_analysis, cls)
-                
-        self.current_class = prev_class
-        
-    def _handle_assignment(self, node: ast.Assign, file_analysis: File, cls: Optional[Class] = None):
-        """Handle Assign nodes"""
-        for target in node.targets:
-            if isinstance(target, ast.Name):
-                var = Variable(
-                    name=target.id,
-                    value=ast.unparse(node.value),
-                    locations=[CodeLocation(
-                        file=self.current_file,
-                        line_start=node.lineno,
-                        line_end=node.end_lineno,
-                        column_start=node.col_offset,
-                        column_end=node.end_col_offset
-                    )],
-                    scope="class" if cls else "module"
-                )
-                
-                if cls:
-                    cls.class_variables.append(var)
-                else:
-                    file_analysis.variables.append(var)
-                    
     def _build_dependency_graph(self, files: Dict[str, File]):
         """Build dependency graph from imports"""
         for file_path, file_analysis in files.items():
             self.dependency_graph.add_node(file_path)
             
+            # Handle Python imports
             for imp in file_analysis.imports:
                 # Convert import to potential file path
+                current_dir = Path(file_path).parent
+                
                 if imp.is_from_import:
-                    module_path = imp.module.replace('.', '/')
+                    # Handle relative imports
+                    if imp.module.startswith('.'):
+                        dots = len(imp.module) - len(imp.module.lstrip('.'))
+                        module_parts = imp.module.lstrip('.').split('.')
+                        # Go up directories based on dot count
+                        target_dir = current_dir
+                        for _ in range(dots):
+                            target_dir = target_dir.parent
+                        module_path = str(target_dir.joinpath(*module_parts))
+                    else:
+                        module_path = imp.module.replace('.', '/')
                 else:
                     module_path = imp.module.replace('.', '/')
-                    
+                
                 # Check if imported module exists in project
-                potential_paths = [
-                    f"{module_path}.py",
-                    f"{module_path}/__init__.py"
-                ]
+                potential_paths = []
+                
+                # For Python files
+                if file_analysis.language == 'python':
+                    potential_paths.extend([
+                        f"{module_path}.py",
+                        f"{module_path}/__init__.py"
+                    ])
+                # For JS/TS files
+                elif file_analysis.language in ['javascript', 'typescript']:
+                    potential_paths.extend([
+                        f"{module_path}.js",
+                        f"{module_path}.ts",
+                        f"{module_path}.jsx",
+                        f"{module_path}.tsx",
+                        f"{module_path}/index.js",
+                        f"{module_path}/index.ts"
+                    ])
                 
                 for path in potential_paths:
                     if path in files:
@@ -287,6 +206,28 @@ class CodeAnalyzer(BaseAnalyzer):
                         if file_path not in files[path].dependents:
                             files[path].dependents.append(file_path)
                         break
+            
+            # Handle JS/TS dependencies
+            if file_analysis.language in ['javascript', 'typescript']:
+                for dep in file_analysis.dependencies:
+                    # Handle different extensions
+                    potential_paths = [
+                        f"{dep}.js",
+                        f"{dep}.ts",
+                        f"{dep}.jsx",
+                        f"{dep}.tsx",
+                        f"{dep}/index.js",
+                        f"{dep}/index.ts"
+                    ]
+                    
+                    for path in potential_paths:
+                        if path in files:
+                            self.dependency_graph.add_edge(file_path, path)
+                            if path not in file_analysis.dependencies:
+                                file_analysis.dependencies.append(path)
+                            if file_path not in files[path].dependents:
+                                files[path].dependents.append(file_path)
+                            break
                         
     def _get_dependencies(self) -> Dict[str, List[str]]:
         """Get file dependencies from graph"""

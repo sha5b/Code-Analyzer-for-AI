@@ -6,9 +6,16 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=[
+        "annotated-types>=0.7.0",
+        "Flask>=3.0.2",
+        "markdown-it-py>=3.0.0",
+        "mdurl>=0.1.2",
         "networkx>=3.4.2",
         "pydantic>=2.10.4",
+        "pydantic_core>=2.27.2",
+        "Pygments>=2.18.0",
         "rich>=13.9.4",
+        "typing_extensions>=4.12.2"
     ],
     entry_points={
         "console_scripts": [
@@ -16,10 +23,10 @@ setup(
         ],
     },
     author="AI Project Analyzer",
-    description="A comprehensive tool for AI-first project analysis and documentation",
+    description="A powerful multi-language code analysis tool for project structure, dependencies, and behavior analysis",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    keywords="project-analysis, code-analysis, documentation, ai",
+    keywords="project-analysis, code-analysis, documentation, multi-language, static-analysis, dependency-analysis",
     url="https://github.com/yourusername/project-analyzer",
     classifiers=[
         "Development Status :: 3 - Alpha",
