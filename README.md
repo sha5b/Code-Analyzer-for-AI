@@ -161,9 +161,127 @@ Features include:
 - Documentation browser
 - Syntax-highlighted code view
 
-## License
+## Roadmap & TODOs
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### 1. Easy Implementation Tasks
+
+#### Add More Design Pattern Detectors
+- [ ] Add Builder Pattern detector
+  - Implement pattern detection in patterns.py
+  - Look for classes with step-by-step construction methods
+  - Add builder-specific code smell detection
+- [ ] Add Adapter Pattern detector
+  - Look for classes that wrap other classes
+  - Check for interface conversion patterns
+  - Add to pattern visualization
+- [ ] Add Command Pattern detector
+  - Look for classes with execute/run methods
+  - Check for command queuing patterns
+  - Add to analysis results
+
+#### Enhance Code Smell Detection
+- [ ] Add Long Method detection
+  - Count lines in methods/functions
+  - Set configurable thresholds
+  - Add to quality metrics
+- [ ] Add Duplicate Code detection
+  - Implement simple string matching
+  - Detect similar code blocks
+  - Add to code quality report
+- [ ] Add Large Class detection
+  - Count methods and variables
+  - Set size thresholds
+  - Add visualization
+- [ ] Add Comment smell detection
+  - Detect TODO/FIXME comments
+  - Find outdated comments
+  - Add to quality metrics
+
+#### Enhance Visualization
+- [ ] Add basic graph visualization
+  - Implement dependency graphs using networkx
+  - Add class inheritance trees
+  - Add interactive navigation
+- [ ] Add code complexity heatmap
+  - Color-code files by complexity
+  - Add legend and metrics
+  - Make interactive
+- [ ] Add treemap visualization
+  - Show project structure
+  - Size by code complexity
+  - Color by language/type
+
+### 2. Medium Difficulty Tasks
+
+#### Language Support
+- [ ] Add Go support
+  - Create analyzers/languages/go.py
+  - Implement function/struct detection
+  - Add import analysis
+  - Add interface detection
+- [ ] Plan for Ruby support
+- [ ] Plan for Rust support
+
+#### Real-time Analysis
+- [ ] Add file system watcher
+  - Monitor for file changes
+  - Trigger incremental analysis
+  - Update UI in real-time
+- [ ] Implement partial analysis
+  - Only analyze changed files
+  - Update existing results
+  - Maintain analysis cache
+
+#### Plugin System
+- [ ] Create basic plugin architecture
+  - Define plugin interface
+  - Add plugin loading mechanism
+  - Add plugin configuration
+- [ ] Create example plugins
+  - Custom pattern detector
+  - Custom metrics calculator
+  - Documentation generator
+
+### 3. Complex Tasks
+
+#### Machine Learning Integration
+- [ ] Code Quality Predictions
+  - Collect training data
+  - Define feature extraction
+  - Implement basic ML model
+  - Train on code smells
+  - Add prediction visualization
+
+#### Advanced Analysis
+- [ ] Add data flow analysis
+  - Track variable values
+  - Detect null references
+  - Analyze control flow
+- [ ] Add security analysis
+  - Find security patterns
+  - Detect vulnerabilities
+  - Generate security reports
+
+### 4. Current Implementation Improvements
+
+#### Web Interface
+- [ ] Fix port number discrepancy (5000 vs 5001)
+- [ ] Implement proper dependency visualization
+- [ ] Add interactive graph views
+- [ ] Add file diff viewer
+- [ ] Add search functionality
+
+#### Analysis Enhancements
+- [ ] Improve pattern detection accuracy
+- [ ] Enhance code smell detection
+- [ ] Add test coverage analysis
+- [ ] Add documentation coverage metrics
+
+#### Documentation
+- [ ] Add API documentation
+- [ ] Add developer guide
+- [ ] Add contribution guidelines
+- [ ] Add architecture documentation
 
 ## Contributing
 
@@ -173,12 +291,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 4. Run tests
 5. Submit a pull request
 
-## Roadmap
+Please check the TODO lists above for areas where you can contribute. We especially welcome contributions to the easy implementation tasks as they provide quick wins for the project.
 
-- [ ] Add support for more programming languages (Go, Ruby, Rust)
-- [ ] Enhance visualization options
-- [ ] Add plugin system for custom analyzers
-- [ ] Add machine learning-based code quality predictions
-- [ ] Implement real-time analysis capabilities
-- [ ] Add more design pattern detectors
-- [ ] Enhance code smell detection
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
