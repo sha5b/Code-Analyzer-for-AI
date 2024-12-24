@@ -1,13 +1,12 @@
-# Project Analyzer
+# File Structure Generator
 
-A powerful multi-language code analysis tool that provides deep insights into your codebase structure, dependencies, and behavior.
+A powerful multi-language code analysis tool that generates comprehensive documentation of your codebase structure, dependencies, and behavior. It analyzes source code to extract definitions, relationships, and provides insights about code quality and patterns.
 
 ## Features
 
 - **Multi-Language Support**:
   - Python (with type hints and docstrings)
-  - JavaScript/TypeScript (with JSDoc support)
-  - React/React-TypeScript
+  - JavaScript/TypeScript (with React support)
   - C/C++ (with templates and namespaces)
   - C# (with attributes and type definitions)
   - Svelte (component analysis)
@@ -19,20 +18,52 @@ A powerful multi-language code analysis tool that provides deep insights into yo
   - Control flow analysis
   - Code quality metrics
   - Function behavior analysis
+  - Design pattern detection:
+    - Singleton Pattern
+    - Factory Pattern
+    - Observer Pattern
+    - Strategy Pattern
+    - Decorator Pattern
+  - Code smell detection
+  - Pure function detection
+  - Side effect analysis
+  - Async behavior detection
+  - Generator function analysis
+  - Recursion detection
+
+- **Variable Analysis**:
   - Type inference
-  - Documentation extraction
+  - Assignment tracking
+  - Usage analysis
+  - Scope detection
+  - Value tracking
+  - Constant detection
 
 - **Project Structure**:
   - Directory structure visualization
   - Entry point detection
   - File categorization
   - Language statistics
-
-- **Visualization**:
-  - Rich terminal output
-  - Web interface for interactive exploration
   - Dependency graphs
-  - Control flow diagrams
+  - Call graphs
+  - Git repository information
+  - Package dependencies
+
+- **Documentation Generation**:
+  - Project overview documentation
+  - Architecture documentation
+  - Function and class documentation
+  - Design pattern documentation
+  - Code quality suggestions
+  - Improvement recommendations
+
+- **Rich Output**:
+  - Terminal-based visualization using Rich
+  - Web interface for interactive exploration
+  - Dependency analysis using NetworkX
+  - Quality metrics visualization
+  - Syntax highlighting
+  - Interactive file browser
 
 ## Installation
 
@@ -41,16 +72,16 @@ A powerful multi-language code analysis tool that provides deep insights into yo
 - Python 3.8 or higher
 - pip (Python package installer)
 
-### Windows
+### Installation Steps
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/project-analyzer.git
-cd project-analyzer
+git clone https://github.com/yourusername/file-structure-generator.git
+cd file-structure-generator
 
 # Create and activate virtual environment
 python -m venv venv
-.\venv\Scripts\activate
+source venv/bin/activate  # On Windows use: .\venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -59,171 +90,95 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-### macOS/Linux
+## Dependencies
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/project-analyzer.git
-cd project-analyzer
+Core dependencies:
+- Flask==3.0.2 - Web interface framework
+- networkx==3.4.2 - Dependency analysis
+- pydantic==2.10.4 - Data validation
+- rich==13.9.4 - Terminal formatting and output
+- annotated-types==0.7.0 - Type annotation support
+- markdown-it-py==3.0.0 - Documentation generation
+- Pygments==2.18.0 - Syntax highlighting
+- typing_extensions==4.12.2 - Enhanced type hints
 
-# Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate
+## Project Structure
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Install the package in development mode
-pip install -e .
+```
+src/
+└── project_analyzer/
+    ├── analyzers/         # Code analysis modules
+    │   ├── code.py       # Core code analysis
+    │   ├── languages/    # Language-specific analyzers
+    │   │   ├── python.py
+    │   │   ├── javascript.py
+    │   │   ├── cpp.py
+    │   │   ├── csharp.py
+    │   │   └── svelte.py
+    │   ├── patterns.py   # Design pattern detection
+    │   └── quality.py    # Code quality metrics
+    ├── models.py         # Data models
+    ├── prompt_generator.py # Documentation generation
+    ├── main.py           # Main application logic
+    └── web_interface.py  # Web UI implementation
 ```
 
 ## Usage
 
-### Command Line Interface
-
-1. Basic Analysis:
+1. Start the analyzer:
 ```bash
 python -m project_analyzer
 ```
-This will open a folder selection dialog. Choose your project directory and optionally specify an output file for the analysis results.
 
-2. Web Interface:
-```bash
-python -m project_analyzer --web
-```
-This launches the web interface for interactive exploration of analysis results.
+2. Select your project directory when prompted
 
-### Python API
+3. View the analysis results in your terminal or web interface
 
-```python
-from project_analyzer import ProjectAnalyzer
-
-# Initialize analyzer
-analyzer = ProjectAnalyzer("path/to/your/project")
-
-# Run analysis
-analysis = analyzer.analyze()
-
-# Display results in terminal
-analyzer.display_analysis(analysis)
-
-# Save results to file
-analyzer.save_analysis(analysis, "output.json")
-```
-
-## Analysis Output
-
-The tool provides comprehensive analysis including:
-
-1. **Project Overview**:
-   - Total file count
-   - Language distribution
-   - Entry points
-   - Directory structure
-
-2. **Code Analysis**:
-   - Function and class definitions
-   - Dependencies between files
-   - Import relationships
-   - Code complexity metrics
-
-3. **Function Analysis**:
-   - Control flow
-   - Variable usage
-   - Side effects
-   - Pure function detection
-   - Exception paths
-   - Async behavior
-
-4. **Quality Metrics**:
-   - Code complexity
-   - Function length
-   - Documentation coverage
-   - Type hint coverage
+The tool will analyze your codebase and provide:
+- Project structure visualization
+- Code quality metrics
+- Function and class analysis
+- Design pattern detection
+- Documentation generation
+- Improvement suggestions
 
 ## Web Interface
 
-The web interface provides an interactive way to explore your codebase:
+Access the web interface for interactive exploration of your codebase:
 
-1. Start the web interface:
+1. Start the web server:
 ```bash
 python -m project_analyzer --web
 ```
 
-2. Open your browser and navigate to `http://localhost:5000`
+2. Open your browser to `http://localhost:5000`
 
-3. Features:
-   - Interactive file browser
-   - Dependency visualization
-   - Code structure diagrams
-   - Search functionality
-   - Metric dashboards
+Features include:
+- Interactive file browser
+- Dependency visualization
+- Code quality metrics
+- Design pattern view
+- Documentation browser
+- Syntax-highlighted code view
 
-## Configuration
+## License
 
-The analyzer can be configured through a `pyproject.toml` file in your project root:
-
-```toml
-[tool.project-analyzer]
-exclude = [
-    "tests/*",
-    "docs/*",
-    "*.pyc",
-    "__pycache__"
-]
-
-[tool.project-analyzer.quality]
-max_complexity = 10
-max_line_length = 88
-min_documentation_coverage = 80
-```
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Run tests: `pytest`
+4. Run tests
 5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- Built with [Rich](https://github.com/Textualize/rich) for beautiful terminal output
-- Uses [NetworkX](https://networkx.org/) for dependency analysis
-- Web interface powered by Flask
-
-## Troubleshooting
-
-### Common Issues
-
-1. **ImportError: No module named 'project_analyzer'**
-   - Ensure you've installed the package in development mode: `pip install -e .`
-   - Check that your virtual environment is activated
-
-2. **Permission denied when running the analyzer**
-   - On Unix systems, ensure the script has execute permissions:
-     ```bash
-     chmod +x venv/bin/project_analyzer
-     ```
-
-3. **Web interface not starting**
-   - Check if port 5000 is available
-   - Ensure Flask is installed correctly
-
-### Getting Help
-
-- Open an issue on GitHub
-- Check the documentation
-- Join our community discussions
 
 ## Roadmap
 
-- [ ] Add support for more languages (Rust, Go, Ruby)
-- [ ] Implement machine learning-based code quality predictions
-- [ ] Add real-time analysis capabilities
+- [ ] Add support for more programming languages (Go, Ruby, Rust)
 - [ ] Enhance visualization options
 - [ ] Add plugin system for custom analyzers
+- [ ] Add machine learning-based code quality predictions
+- [ ] Implement real-time analysis capabilities
+- [ ] Add more design pattern detectors
+- [ ] Enhance code smell detection
