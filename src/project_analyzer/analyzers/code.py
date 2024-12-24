@@ -68,8 +68,8 @@ class CodeAnalyzer(BaseAnalyzer):
         
         # Update files with quality metrics
         for file_path, file_analysis in files.items():
+            # Update function calls
             if file_path in quality_results["function_calls"]:
-                # Update function calls
                 calls = quality_results["function_calls"][file_path]
                 for func in file_analysis.functions:
                     func.calls = [c for c in calls if c != func.name]
@@ -89,6 +89,14 @@ class CodeAnalyzer(BaseAnalyzer):
                             f for f, calls in quality_results["function_calls"].items()
                             if method.name in calls and f != file_path
                         ]
+            
+            # Add design patterns
+            if file_path in quality_results.get("design_patterns", {}):
+                file_analysis.design_patterns = quality_results["design_patterns"][file_path]
+                
+            # Add code smells
+            if file_path in quality_results.get("code_smells", {}):
+                file_analysis.code_smells = quality_results["code_smells"][file_path]
         
         return {
             "files": files,
@@ -102,20 +110,23 @@ class CodeAnalyzer(BaseAnalyzer):
             return None
             
         try:
+            file_type = self.get_file_type(path)
+            rel_path = str(path.relative_to(self.root_path))
+            
+            file_analysis = File(
+                path=rel_path,
+                type=file_type,
+                language=file_type,
+                size_bytes=path.stat().st_size,
+                last_modified=datetime.fromtimestamp(path.stat().st_mtime).isoformat(),
+                encoding=self.get_file_encoding(path)
+            )
+            
             content = path.read_text(encoding=self.get_file_encoding(path))
         except UnicodeDecodeError:
             return None
             
-        self.current_file = str(path.relative_to(self.root_path))
-        
-        stat = path.stat()
-        file_analysis = File(
-            path=self.current_file,
-            size_bytes=stat.st_size,
-            last_modified=datetime.fromtimestamp(stat.st_mtime).isoformat(),
-            language=self.get_file_type(path),
-            encoding=self.get_file_encoding(path)
-        )
+        self.current_file = rel_path
         
         # Get appropriate analyzer for file type
         analyzer_class = self._get_analyzer_class(path)

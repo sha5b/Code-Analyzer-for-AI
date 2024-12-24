@@ -30,6 +30,14 @@ class PromptGenerator:
         if has_classes:
             prompts["classes"] = PromptGenerator._generate_classes_prompt(analysis)
             
+        # Add design patterns section
+        if hasattr(analysis, 'patterns') and analysis.patterns:
+            prompts["design_patterns"] = PromptGenerator._generate_patterns_prompt(analysis)
+            
+        # Add code smells section
+        if hasattr(analysis, 'smells') and analysis.smells:
+            prompts["code_smells"] = PromptGenerator._generate_smells_prompt(analysis)
+            
         # Add suggestions section
         suggestions = []
         
@@ -41,6 +49,45 @@ class PromptGenerator:
             
         if has_classes and not any(c.docstring for file in analysis.files.values() for c in file.classes):
             suggestions.append("- Consider adding docstrings to classes to improve code documentation")
+            
+        # Add suggestions based on code smells
+        if analysis.smells:
+            smell_counts = {}
+            for file_smells in analysis.smells.values():
+                for smell in file_smells:
+                    smell_type = smell['type']
+                    smell_counts[smell_type] = smell_counts.get(smell_type, 0) + 1
+                    
+            for smell_type, count in smell_counts.items():
+                if count > 3:  # Only suggest if it's a recurring issue
+                    if smell_type == 'Long Method':
+                        suggestions.append(f"- Consider refactoring long methods ({count} instances found). Break them down into smaller, more focused functions")
+                    elif smell_type == 'Large Class':
+                        suggestions.append(f"- Consider splitting large classes ({count} instances found). Use composition or inheritance to distribute responsibilities")
+                    elif smell_type == 'Deep Nesting':
+                        suggestions.append(f"- Reduce deep nesting ({count} instances found). Extract complex conditions into well-named functions or use guard clauses")
+                    elif smell_type == 'Too Many Parameters':
+                        suggestions.append(f"- Methods with too many parameters ({count} instances found). Consider using parameter objects or builder pattern")
+                        
+        # Add suggestions based on missing design patterns
+        common_patterns = {'Factory', 'Singleton', 'Observer', 'Strategy', 'Decorator'}
+        found_patterns = set()
+        for patterns_list in analysis.patterns.values():
+            found_patterns.update(patterns_list)
+            
+        missing_patterns = common_patterns - found_patterns
+        if missing_patterns:
+            suggestions.append("\nConsider implementing these design patterns where appropriate:")
+            if 'Factory' in missing_patterns:
+                suggestions.append("- Factory Pattern: For flexible object creation and encapsulating instantiation logic")
+            if 'Singleton' in missing_patterns:
+                suggestions.append("- Singleton Pattern: For managing shared resources or global state")
+            if 'Observer' in missing_patterns:
+                suggestions.append("- Observer Pattern: For implementing event handling and loose coupling")
+            if 'Strategy' in missing_patterns:
+                suggestions.append("- Strategy Pattern: For making algorithms interchangeable and reducing conditional complexity")
+            if 'Decorator' in missing_patterns:
+                suggestions.append("- Decorator Pattern: For adding behavior to objects dynamically")
             
         if suggestions:
             prompts["suggestions"] = "\n".join([
@@ -151,6 +198,53 @@ Class Analysis:
 --------------
 {chr(10).join(classes)}
 """
+
+    @staticmethod
+    def _generate_patterns_prompt(analysis: ProjectAnalysis) -> str:
+        """Generate design patterns prompt"""
+        sections = ["Design Patterns:", "-----------------"]
+        
+        if not analysis.patterns:
+            sections.append("\nNo design patterns detected in the codebase.")
+            sections.append("\nConsider implementing common design patterns like:")
+            sections.append("- Factory Pattern: For flexible object creation")
+            sections.append("- Singleton Pattern: For managing global state")
+            sections.append("- Observer Pattern: For event handling")
+            sections.append("- Strategy Pattern: For interchangeable algorithms")
+            sections.append("- Decorator Pattern: For adding behavior to objects dynamically")
+            return "\n".join(sections)
+        
+        for file_path, patterns in analysis.patterns.items():
+            if patterns:
+                sections.append(f"\n{file_path}:")
+                for pattern in patterns:
+                    sections.append(f"  - {pattern}")
+                    
+        return "\n".join(sections)
+        
+    @staticmethod
+    def _generate_smells_prompt(analysis: ProjectAnalysis) -> str:
+        """Generate code smells prompt"""
+        sections = ["Code Smells:", "-----------------"]
+        
+        if not analysis.smells:
+            sections.append("\nNo significant code smells detected in the codebase.")
+            sections.append("\nCommon code smells to watch out for:")
+            sections.append("- Long Methods: Keep methods focused and concise")
+            sections.append("- Large Classes: Split classes with too many responsibilities")
+            sections.append("- Deep Nesting: Avoid complex nested conditionals")
+            sections.append("- Too Many Parameters: Consider grouping related parameters")
+            return "\n".join(sections)
+        
+        for file_path, smells in analysis.smells.items():
+            if smells:
+                sections.append(f"\n{file_path}:")
+                for smell in smells:
+                    sections.append(f"  - {smell['type']} at line {smell.get('line', 'N/A')}")
+                    if 'message' in smell:
+                        sections.append(f"    {smell['message']}")
+                    
+        return "\n".join(sections)
 
     @staticmethod
     def _format_structure(structure, level: int) -> str:

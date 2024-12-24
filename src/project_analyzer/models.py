@@ -1,7 +1,7 @@
 """
 Data models for project analysis results
 """
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Any
 from pydantic import BaseModel, Field
 
 
@@ -100,8 +100,9 @@ class Import(BaseModel):
 
 
 class File(BaseModel):
-    """Single file analysis results"""
+    """Source code file analysis"""
     path: str
+    type: str
     imports: List[Import] = Field(default_factory=list)
     functions: List[Function] = Field(default_factory=list)
     classes: List[Class] = Field(default_factory=list)
@@ -113,6 +114,8 @@ class File(BaseModel):
     last_modified: str
     language: str
     encoding: str = "utf-8"
+    design_patterns: List[str] = Field(default_factory=list)
+    code_smells: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 class ProjectStructure(BaseModel):
@@ -139,3 +142,5 @@ class ProjectAnalysis(BaseModel):
     git_info: Optional[Dict[str, str]] = None
     readme_content: Optional[str] = None
     license_type: Optional[str] = None
+    patterns: Dict[str, List[str]] = {}
+    smells: Dict[str, List[Dict[str, Any]]] = {}

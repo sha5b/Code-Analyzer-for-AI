@@ -118,38 +118,47 @@ HTML_TEMPLATE = """
         <h1>Project Analysis Prompts</h1>
         <div class="project-name">Analyzing: {{ project_name }}</div>
         <div class="tabs">
-            {% for category in prompts.keys() %}
-            <button class="tab {% if loop.first %}active{% endif %}" 
-                    onclick="showContent('{{ category }}')">
-                {{ category|replace('_', ' ')|title }}
-            </button>
-            {% endfor %}
+            <button class="tab active" data-tab="project_overview">Project Overview</button>
+            <button class="tab" data-tab="architecture">Architecture</button>
+            <button class="tab" data-tab="functions">Functions</button>
+            <button class="tab" data-tab="classes">Classes</button>
+            <button class="tab" data-tab="design_patterns">Design Patterns</button>
+            <button class="tab" data-tab="code_smells">Code Smells</button>
+            <button class="tab" data-tab="suggestions">Suggestions</button>
         </div>
         {% for category, content in prompts.items() %}
         <pre class="content {% if loop.first %}active{% endif %}" id="{{ category }}"><code class="language-markdown">{{ content }}</code></pre>
         {% endfor %}
     </div>
     <script>
-        function showContent(category) {
-            // Hide all content
-            document.querySelectorAll('.content').forEach(el => {
-                el.classList.remove('active');
-            });
-            document.querySelectorAll('.tab').forEach(el => {
-                el.classList.remove('active');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers to all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const category = tab.getAttribute('data-tab');
+                    showContent(category);
+                });
             });
             
-            // Show selected content
-            document.getElementById(category).classList.add('active');
-            document.querySelector(`[onclick="showContent('${category}')"]`).classList.add('active');
-        }
-        
-        // Initialize syntax highlighting
-        document.addEventListener('DOMContentLoaded', (event) => {
-            document.querySelectorAll('pre code').forEach((el) => {
-                hljs.highlightElement(el);
-            });
+            // Initialize syntax highlighting
+            hljs.highlightAll();
         });
+        
+        function showContent(category) {
+            // Hide all content
+            document.querySelectorAll('.content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected content and activate tab
+            document.getElementById(category).classList.add('active');
+            document.querySelector(`[data-tab="${category}"]`).classList.add('active');
+        }
     </script>
 </body>
 </html>
@@ -188,10 +197,10 @@ def run_web_interface():
         
         # Run Flask app
         print("\nStarting web interface...")
-        app.run(debug=False, port=5000)
+        app.run(host='0.0.0.0', port=5001)
         
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"Error running web interface: {str(e)}")
 
 if __name__ == '__main__':
     run_web_interface()

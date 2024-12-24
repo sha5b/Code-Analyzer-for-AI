@@ -38,8 +38,8 @@ env/
 *.json
 !pyproject.json
 !package.json
+!analysis.json
 output/
-analysis/
 
 # OS
 .DS_Store

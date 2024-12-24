@@ -51,6 +51,9 @@ class ProjectAnalyzer:
         code_analyzer = CodeAnalyzer(self.root_path)
         code_results = code_analyzer.analyze()
         
+        # Get quality metrics
+        quality_metrics = code_analyzer.quality_analyzer.analyze()
+        
         # Detailed function analysis
         self.console.print(Panel.fit("🔍 Analyzing function behavior...", style="blue"))
         function_analyzer = FunctionAnalyzer(self.root_path)
@@ -124,7 +127,9 @@ class ProjectAnalyzer:
             files=code_results["files"],
             total_files=structure_results["total_files"],
             languages=structure_results["languages"],
-            entry_points=structure_analyzer.find_entry_points()
+            entry_points=structure_analyzer.find_entry_points(),
+            patterns=quality_metrics.get("design_patterns", {}),
+            smells=quality_metrics.get("code_smells", {})
         )
         
         return analysis
